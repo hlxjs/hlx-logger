@@ -55,8 +55,8 @@ function logTimestamp() {
   return `${omitTimestamp ? '' : `${getDateTimeString()} `}`;
 }
 
-function logMediaPlaylist({uri, playlistType = '', isIFrame, segments}) {
-  return `[Media Playlist (type="${playlistType}"${isIFrame ? ', Iframe-only)' : ')'}] ${uri}${logSegments(segments)}\n`;
+function logMediaPlaylist({uri, parentUri, playlistType = '', isIFrame, segments}) {
+  return `[Media Playlist (type="${playlistType}"${isIFrame ? ', Iframe-only)' : ')'}] ${uri} (parent=${parentUri})${logSegments(segments)}\n`;
 }
 
 function logSegments(segments) {
@@ -70,8 +70,8 @@ function logSegments(segments) {
   return `\n${logs.join('\n')}`;
 }
 
-function logSegment({uri, mediaSequenceNumber, duration}) {
-  return `#${mediaSequenceNumber} (${duration} sec): ${uri}`;
+function logSegment({uri, parentUri, mediaSequenceNumber, duration}, printParent) {
+  return `#${mediaSequenceNumber} (${duration} sec): ${uri}${printParent ? ` (parent=${parentUri})` : ''}`;
 }
 
 function simple(data = {}) {
@@ -82,7 +82,7 @@ function simple(data = {}) {
     return `\n${logTimestamp()}${logMediaPlaylist(data)}\n`;
   }
   if (data.type === 'segment') {
-    return `${logTimestamp()}[Segment] ${logSegment(data)}\n`;
+    return `${logTimestamp()}[Segment] ${logSegment(data, true)}\n`;
   }
   return '';
 }

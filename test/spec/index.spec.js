@@ -71,33 +71,37 @@ function getSegments(playlistUrl) {
   return segments;
 }
 
+const MASTER_URI = 'http://foo.bar/manifest/master.m3u8';
+
 test.cb('createLogger.simple', t => {
   class Reader extends Readable {
     constructor() {
       super({objectMode: true});
     }
 
-    _writeMasterPlaylist(url) {
-      const master = HLS.parse(getPlaylist(url));
-      master.uri = url;
+    _writeMasterPlaylist(uri) {
+      const master = HLS.parse(getPlaylist(uri));
+      master.uri = uri;
       this.push(master);
     }
 
-    _writeMediaPlaylist(url) {
-      const media = HLS.parse(getPlaylist(url));
-      media.uri = url;
+    _writeMediaPlaylist(uri, parentUri) {
+      const media = HLS.parse(getPlaylist(uri));
+      media.uri = uri;
+      media.parentUri = parentUri;
       this.push(media);
-      const segments = getSegments(url);
+      const segments = getSegments(uri);
       for (const segment of segments) {
+        segment.parentUri = uri;
         this.push(segment);
       }
     }
 
     _read() {
-      this._writeMasterPlaylist('http://foo.bar/manifest/master.m3u8');
-      this._writeMediaPlaylist('http://foo.bar/manifest/low/main.m3u8');
-      this._writeMediaPlaylist('http://foo.bar/manifest/mid/main.m3u8');
-      this._writeMediaPlaylist('http://foo.bar/manifest/high/main.m3u8');
+      this._writeMasterPlaylist(MASTER_URI);
+      this._writeMediaPlaylist('http://foo.bar/manifest/low/main.m3u8', MASTER_URI);
+      this._writeMediaPlaylist('http://foo.bar/manifest/mid/main.m3u8', MASTER_URI);
+      this._writeMediaPlaylist('http://foo.bar/manifest/high/main.m3u8', MASTER_URI);
       this.push(null);
     }
   }
@@ -169,32 +173,32 @@ test.cb('createLogger.simple', t => {
 		rendition(video): /manifest/high/sub2.m3u8
 
 
-1970-01-01 00:00:00 [Media Playlist (type="")] http://foo.bar/manifest/low/main.m3u8
+1970-01-01 00:00:00 [Media Playlist (type="")] http://foo.bar/manifest/low/main.m3u8 (parent=http://foo.bar/manifest/master.m3u8)
 	segment #0 (2.009 sec): http://foo.bar/segment/low/main-01.ts
 	segment #1 (2.009 sec): http://foo.bar/segment/low/main-02.ts
 	segment #2 (1.003 sec): http://foo.bar/segment/low/main-03.ts
 
-1970-01-01 00:00:00 [Segment] #0 (2.009 sec): http://foo.bar/segment/low/main-01.ts
-1970-01-01 00:00:00 [Segment] #1 (2.009 sec): http://foo.bar/segment/low/main-02.ts
-1970-01-01 00:00:00 [Segment] #2 (1.003 sec): http://foo.bar/segment/low/main-03.ts
+1970-01-01 00:00:00 [Segment] #0 (2.009 sec): http://foo.bar/segment/low/main-01.ts (parent=http://foo.bar/manifest/low/main.m3u8)
+1970-01-01 00:00:00 [Segment] #1 (2.009 sec): http://foo.bar/segment/low/main-02.ts (parent=http://foo.bar/manifest/low/main.m3u8)
+1970-01-01 00:00:00 [Segment] #2 (1.003 sec): http://foo.bar/segment/low/main-03.ts (parent=http://foo.bar/manifest/low/main.m3u8)
 
-1970-01-01 00:00:00 [Media Playlist (type="")] http://foo.bar/manifest/mid/main.m3u8
+1970-01-01 00:00:00 [Media Playlist (type="")] http://foo.bar/manifest/mid/main.m3u8 (parent=http://foo.bar/manifest/master.m3u8)
 	segment #0 (2.009 sec): http://foo.bar/segment/mid/main-01.ts
 	segment #1 (2.009 sec): http://foo.bar/segment/mid/main-02.ts
 	segment #2 (1.003 sec): http://foo.bar/segment/mid/main-03.ts
 
-1970-01-01 00:00:00 [Segment] #0 (2.009 sec): http://foo.bar/segment/mid/main-01.ts
-1970-01-01 00:00:00 [Segment] #1 (2.009 sec): http://foo.bar/segment/mid/main-02.ts
-1970-01-01 00:00:00 [Segment] #2 (1.003 sec): http://foo.bar/segment/mid/main-03.ts
+1970-01-01 00:00:00 [Segment] #0 (2.009 sec): http://foo.bar/segment/mid/main-01.ts (parent=http://foo.bar/manifest/mid/main.m3u8)
+1970-01-01 00:00:00 [Segment] #1 (2.009 sec): http://foo.bar/segment/mid/main-02.ts (parent=http://foo.bar/manifest/mid/main.m3u8)
+1970-01-01 00:00:00 [Segment] #2 (1.003 sec): http://foo.bar/segment/mid/main-03.ts (parent=http://foo.bar/manifest/mid/main.m3u8)
 
-1970-01-01 00:00:00 [Media Playlist (type="")] http://foo.bar/manifest/high/main.m3u8
+1970-01-01 00:00:00 [Media Playlist (type="")] http://foo.bar/manifest/high/main.m3u8 (parent=http://foo.bar/manifest/master.m3u8)
 	segment #0 (2.009 sec): http://foo.bar/segment/high/main-01.ts
 	segment #1 (2.009 sec): http://foo.bar/segment/high/main-02.ts
 	segment #2 (1.003 sec): http://foo.bar/segment/high/main-03.ts
 
-1970-01-01 00:00:00 [Segment] #0 (2.009 sec): http://foo.bar/segment/high/main-01.ts
-1970-01-01 00:00:00 [Segment] #1 (2.009 sec): http://foo.bar/segment/high/main-02.ts
-1970-01-01 00:00:00 [Segment] #2 (1.003 sec): http://foo.bar/segment/high/main-03.ts
+1970-01-01 00:00:00 [Segment] #0 (2.009 sec): http://foo.bar/segment/high/main-01.ts (parent=http://foo.bar/manifest/high/main.m3u8)
+1970-01-01 00:00:00 [Segment] #1 (2.009 sec): http://foo.bar/segment/high/main-02.ts (parent=http://foo.bar/manifest/high/main.m3u8)
+1970-01-01 00:00:00 [Segment] #2 (1.003 sec): http://foo.bar/segment/high/main-03.ts (parent=http://foo.bar/manifest/high/main.m3u8)
 `;
 
   const src = new Reader();
