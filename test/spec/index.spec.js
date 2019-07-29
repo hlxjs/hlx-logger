@@ -1,7 +1,6 @@
 const {Readable, Writable} = require('stream');
 const test = require('ava');
 const rewire = require('rewire');
-const proxyquire = require('proxyquire');
 const HLS = require('hls-parser');
 
 function getPlaylist(url) {
@@ -126,19 +125,31 @@ test.cb('createLogger.simple', t => {
   }
 
   const tester = new Tester();
-  const mockUtil = rewire('../../util');
-  mockUtil.__set__({
+  const mockHlxUtil = rewire('hlx-util');
+  mockHlxUtil.__set__({
     Date: class MockDate extends Date {
       constructor() {
         super(0);
       }
-    },
-    process: {
-        stdout: tester
     }
   });
-  const mockWriteStream = proxyquire('../../writable', {'./util': mockUtil});
-  const {createLogger} = proxyquire('../..', {'./writable': mockWriteStream});
+  const mockUtil = rewire('../../util');
+  mockUtil.__set__({
+    process: {
+        stdout: tester
+    },
+    getDateString: mockHlxUtil.getDateString,
+    getDateTimeString: mockHlxUtil.getDateTimeString
+  });
+  const mockWritable = rewire('../../writable');
+  mockWritable.__set__({
+    getOutput: mockUtil.getOutput
+  });
+  const mockIndex = rewire('../..');
+  mockIndex.__set__({
+    WriteStream: mockWritable
+  });
+  const {createLogger} = mockIndex;
 
   // const expected = '';
 
