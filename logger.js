@@ -92,7 +92,13 @@ function objDump(data = {}) {
 }
 
 function raw(data = {}) {
-  return `---\n${HLS.stringify(data)}`;
+  if (data.type === 'playlist') {
+    return `---\n${HLS.stringify(data)}`;
+  }
+  if (data.type === 'segment') {
+    return `${logTimestamp()}[Segment] ${logSegment(data, true)}\n`;
+  }
+  return '';
 }
 
 module.exports = createLogger;
