@@ -88,12 +88,12 @@ function simple(data = {}) {
 }
 
 function objDump(data = {}) {
-  return `---\n${JSON.stringify(data, null, 2)}`;
+  return `---\n${JSON.stringify(data, null, 2)}\n`;
 }
 
 function raw(data = {}) {
   if (data.type === 'playlist') {
-    return `---\n${HLS.stringify(data)}`;
+    return `===\n${data.uri}\n---\n${HLS.stringify(data)}\n`;
   }
   if (data.type === 'segment') {
     return `${logTimestamp()}[Segment] ${logSegment(data, true)}\n`;
