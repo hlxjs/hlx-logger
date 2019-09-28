@@ -1,6 +1,6 @@
 {
   "name": "hlx-logger",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A passthrough stream that skims all data and logs them into a file or stdout",
   "main": "index.js",
   "directories": {
